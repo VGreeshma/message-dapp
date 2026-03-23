@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message DApp</title>
+</head>
+<body>
+
+<h2>Simple Message DApp</h2>
+
+<p><strong>Stored Message:</strong> <span id="currentMessage">Loading...</span></p>
+
+<input type="text" id="messageInput" placeholder="Enter new message">
+<button onclick="updateMessage()">Save Message</button>
+
+<script src="https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js"></script>
+
+<script>
+    // Your deployed contract address (update after migrate)
+    const contractAddress = "0x541ffd719628Fe9dca2Ff1A870bb20566dDfA4b4";
+
+    // ABI of your Message contract
+    const abi = [
+        {
+            "inputs": [],
+            "name": "getMessage",
+            "outputs": [
+                { "internalType": "string", "name": "", "type": "string" }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                { "internalType": "string", "name": "_newMessage", "type": "string" }
+            ],
+            "name": "setMessage",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        }
+    ];
+
+    let web3;
+    let contract;
+    let account;
+
+    async function load() {
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+
+            const accounts = await web3.eth.getAccounts();
+            account = accounts[0];
+
+            
+            contract = new web3.eth.Contract(abi, contractAddress);
+
+            const message = await contract.methods.getMessage().call();
+            document.getElementById("currentMessage").innerText = message;
+
+        } else {
+            alert("MetaMask not detected. Please install MetaMask!");
+        }
+    }
+
+    async function updateMessage() {
+        const newMessage = document.getElementById("messageInput").value;
+
+        document.getElementById("currentMessage").innerText = "Updating...";
+
+        await contract.methods.setMessage(newMessage).send({ from: account });
+
+        const message = await contract.methods.getMessage().call();
+        document.getElementById("currentMessage").innerText = message;
+    }
+
+    load();
+</script>
+
+</body>
+</html>
